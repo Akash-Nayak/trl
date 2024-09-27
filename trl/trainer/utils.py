@@ -109,7 +109,7 @@ class DataCollatorForCompletionOnlyLM(DataCollatorForLanguageModeling):
         *args,
         mlm: bool = False,
         ignore_index: int = -100,
-        padding_free: bool = False,
+        padding_free: bool = True,
         **kwargs,
     ):
         super().__init__(*args, mlm=mlm, **kwargs)
@@ -231,6 +231,23 @@ class DataCollatorForCompletionOnlyLM(DataCollatorForLanguageModeling):
             batch["position_ids"] = attn_mask.cumsum(1)[attn_mask.bool()].unsqueeze(0) - 1
             batch["labels"] = batch["labels"][attn_mask.bool()].unsqueeze(0)
             batch["labels"][batch["position_ids"] == 0] = self.ignore_index
+            # batch_length = batch["input_ids"].shape[0]
+            # sequence_length = batch["input_ids"].shape[1]
+
+            flattened_position_ids = batch["position_ids"].flatten()
+            # logging.warning("batch size = %s, sequence_length = %s, flattened_input_ids = %s", 
+            #                 batch_length, sequence_length, batch["input_ids"].flatten().size())
+            indices_q = torch.arange(flattened_position_ids.size(0), device=flattened_position_ids.device, dtype=torch.int32)
+            batch["cu_seq_lens_q"] = torch.cat(
+                (
+                    indices_q[flattened_position_ids == 0],
+                    torch.tensor(flattened_position_ids.size(), device=flattened_position_ids.device, dtype=torch.int32),
+                )
+            )
+            batch["cu_seq_lens_k"] = batch["cu_seq_lens_q"]
+
+            batch["max_length_k"] = flattened_position_ids.max().item() + 1
+            batch["max_length_q"] = batch["max_length_k"]
 
         return batch
 
