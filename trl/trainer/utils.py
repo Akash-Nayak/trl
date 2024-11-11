@@ -224,6 +224,7 @@ class DataCollatorForCompletionOnlyLM(DataCollatorForLanguageModeling):
                 if len(response_token_ids_idxs) < len(human_token_ids_idxs):
                     batch["labels"][i, human_token_ids_idxs[-1] :] = self.ignore_index
 
+        print(f"\n===============================\npadding_free: {self.padding_free}\n===================================\n")
         if self.padding_free:
             # remove padding, `attention_mask` and add `position_ids`
             attn_mask = batch.pop("attention_mask")
@@ -248,6 +249,7 @@ class DataCollatorForCompletionOnlyLM(DataCollatorForLanguageModeling):
 
             batch["max_length_k"] = flattened_position_ids.max().item() + 1
             batch["max_length_q"] = batch["max_length_k"]
+            print(f"\n===============================\nattn_mask: {attn_mask}\n===================================\n")
 
         return batch
 
