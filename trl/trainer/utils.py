@@ -249,7 +249,10 @@ class DataCollatorForCompletionOnlyLM(DataCollatorForLanguageModeling):
 
             batch["max_length_k"] = flattened_position_ids.max().item() + 1
             batch["max_length_q"] = batch["max_length_k"]
-            print(f"\n===============================\nattn_mask: {attn_mask}\n===================================\n")
+            if "attention_mask" in batch.keys():
+                print("\n===============================\nKey 'attention_mask' still present in the dictionary.\n===============================\n")
+            else:
+                print("\n===============================\nKey 'attention_mask' is not present in the dictionary.\n===============================\n")
 
         return batch
 
